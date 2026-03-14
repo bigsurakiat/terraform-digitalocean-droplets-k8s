@@ -47,18 +47,14 @@ kubernetesVersion: "stable"
 ---
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
-failSwapOn: false
-featureGates:
-    NodeSwap: true
-memorySwap:
-    swapBehavior: LimitedSwap
+failSwapOn: true
 cgroupDriver: cgroupfs
 EOF
 
 kubeadm init \
-    --ignore-preflight-errors=NumCPU \
-    --config=cluster-config.yaml \
-    --upload-certs \
+  --ignore-preflight-errors=NumCPU \
+  --config=cluster-config.yaml \
+  --upload-certs \
 
 mkdir -p $HOME/.kube
 cp -i /etc/kubernetes/admin.conf ${HOME}/.kube/config

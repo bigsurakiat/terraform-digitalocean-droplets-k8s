@@ -1,3 +1,32 @@
+variable "cilium_kubeproxy_replacement" {
+  description = "Cilium kubeProxyReplacement value (true, false, or strict)"
+  type        = string
+  default     = "true"
+}
+
+variable "cilium_ipv4_cidr" {
+  description = "Cilium IPv4 Pod CIDR"
+  type        = string
+  default     = "10.244.0.0/16"
+}
+
+variable "cilium_ipv6_cidr" {
+  description = "Cilium IPv6 Pod CIDR"
+  type        = string
+  default     = "2001:db8:42:0::/96"
+}
+
+variable "cilium_ipv4_mask_size" {
+  description = "Cilium IPv4 mask size"
+  type        = number
+  default     = 24
+}
+
+variable "cilium_ipv6_mask_size" {
+  description = "Cilium IPv6 mask size"
+  type        = number
+  default     = 112
+}
 variable "do_token" {
   description = "DigitalOcean Personal Access Token"
   type        = string
@@ -30,8 +59,8 @@ variable "master_nodes_count" {
   description = "Master Node Counts"
   type        = number
   validation {
-    condition     = var.master_nodes_count % 2 == 0 || var.master_nodes_count == 1
-    error_message = "Master Node must be even number!"
+    condition     = var.master_nodes_count % 2 != 0
+    error_message = "Master Node must be odd number!"
   }
 }
 
@@ -48,8 +77,8 @@ variable "worker_nodes_count" {
   description = "Worker Node Counts"
   type        = number
   validation {
-    condition     = var.worker_nodes_count % 2 != 0 || var.worker_nodes_count == 1
-    error_message = "Worker Node must be odd number!"
+    condition     = var.worker_nodes_count != 0
+    error_message = "Worker Node must not be zero!"
   }
 }
 

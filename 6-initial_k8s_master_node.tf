@@ -1,6 +1,9 @@
 resource "null_resource" "master-node-initial" {
   depends_on = [null_resource.additional-setup-control-plane-node, null_resource.master-node-install-k8s]
   count      = length(digitalocean_droplet.master-node)
+  triggers = {
+    droplet_id = digitalocean_droplet.master-node[count.index].id
+  }
   provisioner "file" {
     source      = "config/kubeconfig"
     destination = "/tmp/kubeconfig"
@@ -8,7 +11,7 @@ resource "null_resource" "master-node-initial" {
       type        = "ssh"
       user        = "root"
       host        = digitalocean_droplet.master-node[count.index].ipv4_address
-      private_key = file("ssh_keys/id_rsa")
+      private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
     }
   }
 
@@ -19,7 +22,7 @@ resource "null_resource" "master-node-initial" {
       type        = "ssh"
       user        = "root"
       host        = digitalocean_droplet.master-node[count.index].ipv4_address
-      private_key = file("ssh_keys/id_rsa")
+      private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
     }
   }
 
@@ -30,7 +33,7 @@ resource "null_resource" "master-node-initial" {
       type        = "ssh"
       user        = "root"
       host        = digitalocean_droplet.master-node[count.index].ipv4_address
-      private_key = file("ssh_keys/id_rsa")
+      private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
     }
   }
 
@@ -50,7 +53,7 @@ resource "null_resource" "master-node-initial" {
       type        = "ssh"
       user        = "root"
       host        = digitalocean_droplet.master-node[count.index].ipv4_address
-      private_key = file("ssh_keys/id_rsa")
+      private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
       timeout     = "600s"
     }
   }

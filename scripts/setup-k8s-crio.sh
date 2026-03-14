@@ -14,7 +14,7 @@ dnf makecache --refresh
 sudo dnf install yum-plugin-versionlock -y
 sudo dnf install -y wget
 
-sudo timedatectl set-timezone Asia/Bangkok
+sudo timedatectl set-timezone America/Los_Angeles
 
 #2) Disable swap & add kernel settings
 
@@ -30,7 +30,7 @@ sudo dnf install htop -y
 sudo modprobe overlay
 sudo modprobe br_netfilter
 
-cat > sudo tee /etc/modules-load.d/k8s.conf << EOF
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 overlay
 br_netfilter
 EOF
@@ -44,17 +44,10 @@ EOF
 
 sudo sysctl --system
 
-# Enable Swap
-sudo dd if=/dev/zero of=/swapfile bs=1G count=16
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
-sudo cp /etc/fstab /etc/fstab.bak
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-sudo sysctl vm.swappiness=100
-sudo sysctl vm.vfs_cache_pressure=70
-echo 'vm.swappiness=100' | sudo tee -a /etc/sysctl.conf
-echo 'vm.vfs_cache_pressure=70' | sudo tee -a /etc/sysctl.conf
+# Swap is disabled for Kubernetes best practices
+# (If a swapfile exists, it should be turned off and removed)
+sudo swapoff -a
+sudo sed -i '/ swap / s/^/#/' /etc/fstab
 
 sudo dnf update -y
 sudo dnf install ca-certificates curl gnupg -y
@@ -85,10 +78,10 @@ sudo dnf install -y ca-certificates curl
 cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
-baseurl=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/
+baseurl=https://pkgs.k8s.io/core:/stable:/v1.34/rpm/
 enabled=1
 gpgcheck=1
-gpgkey=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/repodata/repomd.xml.key
+gpgkey=https://pkgs.k8s.io/core:/stable:/v1.34/rpm/repodata/repomd.xml.key
 exclude=kubelet kubeadm kubectl
 EOF
 

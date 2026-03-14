@@ -1,4 +1,4 @@
-apiVersion: "cilium.io/v2alpha1"
+apiVersion: "cilium.io/v2"
 kind: CiliumLoadBalancerIPPool
 metadata:
   name: "ip-pools"
@@ -16,3 +16,9 @@ metadata:
 spec:
   externalIPs: true
   loadBalancerIPs: true
+  interfaces:
+    - "*"
+  nodeSelector:
+    matchLabels: {}
+  serviceSelector:
+    matchLabels: {}
