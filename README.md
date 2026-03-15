@@ -5,18 +5,26 @@
 
 ### Features 🌟
 * **CentOS-based K8s Install Script (AlmaLinux / Rocky Linux / CentOS)**
-* **K8s v1.32**
-* Swap-Enabled
+* **K8s v1.34** (in scripts)
+* Swap Disabled (scripts run `swapoff -a` and set `failSwapOn: true`)
 * **CRI-O / containerD**
 * **Cilium eBPF / Cilium Load Balancer**
-* Prometheus Grafana Stack
-* DigitalOcean CSI PV Integrated
+* Prometheus Grafana Stack (via Helm)
+* DigitalOcean CSI PV Integrated (via DO CSI driver)
 
 ### Install Instruction 🏗️
-**IMPORTANT!!!! You must issue DigitalOcean PAT Token from your accounts**
-1. **For variables**: write in *.tfavrs* ( is any name) for variables (Example file in example.tfvars.ex)
-2. To **Run** use : terraform apply -var-file='*.tfvars'
-3. To **Destroy** use : terraform destroy -var-file='*.tfvars'
+**IMPORTANT: Ensure DigitalOcean PAT Token is set in tfvars**
+1. **For variables**: copy and edit `example.tfvars.ex` to a file like `cluster.tfvars`.
+   - set `control_plane_node_count`, `control_plane_node_droplet_size`, `worker_nodes_count`, and other vars.
+   - `master_node_*` vars are now replaced by control-plane vars (use control-plane values).
+2. Run: `terraform init && terraform validate`
+3. Apply: `terraform apply -var-file='cluster.tfvars'`
+4. Destroy: `terraform destroy -var-file='cluster.tfvars'`
+
+### Notes
+* `3-install_k8s.tf` handles control-plane + worker software setup.
+* `5-initial_k8s_control-plane.tf` handles control-plane initialization and join scripts.
+* `8-additional-setup-kubernetes.tf` handles cilium + prometheus + DO CSI setup.
 
 ### Credits / Thanks to
 * Narongchai (@kreactnative) (https://github.com/kreactnative/digitalocean-terraform-k8s-dualstack-elb/)

@@ -1,20 +1,20 @@
 resource "digitalocean_firewall" "web" {
   name        = "${var.cluster_name}-k8s-firewall"
-  depends_on  = [digitalocean_droplet.master-node, digitalocean_droplet.worker-node, digitalocean_droplet.control-plane-node]
-  droplet_ids = [for item in concat(digitalocean_droplet.master-node, digitalocean_droplet.worker-node, digitalocean_droplet.control-plane-node) : item.id]
+  depends_on  = [digitalocean_droplet.worker-node, digitalocean_droplet.control-plane-node]
+  droplet_ids = [for item in concat(digitalocean_droplet.worker-node, digitalocean_droplet.control-plane-node) : item.id]
 
   inbound_rule {
     protocol           = "tcp"
     port_range         = "1-65535"
     source_tags        = var.digitalocean_tags
-    source_droplet_ids = [for item in concat(digitalocean_droplet.master-node, digitalocean_droplet.worker-node, digitalocean_droplet.control-plane-node) : item.id]
+    source_droplet_ids = [for item in concat(digitalocean_droplet.worker-node, digitalocean_droplet.control-plane-node) : item.id]
   }
 
   inbound_rule {
     protocol           = "udp"
     port_range         = "1-65535"
     source_tags        = var.digitalocean_tags
-    source_droplet_ids = [for item in concat(digitalocean_droplet.master-node, digitalocean_droplet.worker-node, digitalocean_droplet.control-plane-node) : item.id]
+    source_droplet_ids = [for item in concat(digitalocean_droplet.worker-node, digitalocean_droplet.control-plane-node) : item.id]
   }
 
   inbound_rule {

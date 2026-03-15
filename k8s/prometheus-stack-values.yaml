@@ -3594,8 +3594,8 @@ prometheus:
     ## scrape configs are going to break Prometheus after the upgrade.
     ## AdditionalScrapeConfigs can be defined as a list or as a templated string.
     ##
-    ## The scrape configuration example below will find master nodes, provided they have the name .*mst.*, relabel the
-    ## port to 2379 and allow etcd scraping provided it is running on all Kubernetes master nodes
+    ## The scrape configuration example below will find control-plane nodes, provided they have the name .*mst.*, relabel the
+    ## port to 2379 and allow etcd scraping provided it is running on all Kubernetes control-plane nodes
     ##
     # additionalScrapeConfigs:
     #   - job_name: 'grok'

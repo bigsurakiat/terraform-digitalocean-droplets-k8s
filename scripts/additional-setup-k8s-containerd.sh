@@ -1,13 +1,12 @@
-if [ -z "$1" ] && [ -z "$2" ]
-then
-    echo "IP Address is Empty!"
-    exit 1
-fi
-
 kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 
-export MASTER_NODE_IP=$1
-export MASTER_NODE_IPV6=$2
+if [ -z "$1" ] && [ -z "$2" ]; then
+  echo "IP Address is Empty!"
+  exit 1
+fi
+
+export CONTROL_PLANE_NODE_IP=$1
+export CONTROL_PLANE_NODE_IPV6=$2
 
 # Metrics Server
 kubectl apply -f /tmp/metrics-server.yaml
@@ -31,7 +30,7 @@ helm upgrade --install cilium cilium/cilium \
   --set bpf.masquerade=true \
   --set encryption.nodeEncryption=false \
   --set routingMode=tunnel \
-  --set k8sServiceHost=$MASTER_NODE_IP \
+  --set k8sServiceHost=$CONTROL_PLANE_NODE_IP \
   --set k8sServicePort=6443  \
   --set kubeProxyReplacement=${CILIUM_KUBEPROXY_REPLACEMENT:-true} \
   --set operator.replicas=1  \

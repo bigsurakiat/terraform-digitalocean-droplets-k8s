@@ -1,5 +1,5 @@
 resource "digitalocean_droplet" "worker-node" {
-  depends_on = [digitalocean_droplet.control-plane-node, digitalocean_droplet.master-node]
+  depends_on = [digitalocean_droplet.control-plane-node]
   count      = var.worker_nodes_count
   name       = "${var.cluster_name}-worker-${count.index + 1}"
   image      = var.droplet_images

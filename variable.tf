@@ -46,21 +46,21 @@ variable "droplet_images" {
   }
 }
 
-variable "master_node_droplet_size" {
-  description = "Master Node Droplet Size"
+variable "control_plane_node_droplet_size" {
+  description = "Control Plane Node Droplet Size"
   type        = string
   validation {
-    condition     = var.master_node_droplet_size != null
-    error_message = "Master Node Droplet Size Can't Be Null"
+    condition     = var.control_plane_node_droplet_size != null
+    error_message = "Control Plane Node Droplet Size Can't Be Null"
   }
 }
 
-variable "master_nodes_count" {
-  description = "Master Node Counts"
+variable "control_plane_node_count" {
+  description = "Control Plane Node Counts"
   type        = number
   validation {
-    condition     = var.master_nodes_count % 2 != 0
-    error_message = "Master Node must be odd number!"
+    condition     = var.control_plane_node_count % 2 != 0
+    error_message = "Control Plane Node must be odd number!"
   }
 }
 
@@ -108,15 +108,6 @@ variable "cluster_name" {
   validation {
     condition     = var.cluster_name != null
     error_message = "Cluster Name Shouldn't be Null"
-  }
-}
-
-variable "control_plane_node_droplet_size" {
-  description = "Control Plane Node Droplet Size"
-  type        = string
-  validation {
-    condition     = var.control_plane_node_droplet_size != null
-    error_message = "Control Plane Node Droplet Size Can't Be Null"
   }
 }
 

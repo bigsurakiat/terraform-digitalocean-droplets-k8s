@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # CentOS-based Linux K8s Installation with Cilium Enabled on ContainerD
-# This scripts for Master / Worker Node
+# This scripts for Control Plane / Worker Node
 
 sudo mkdir -p /etc/systemd/system/user@.service.d
 cat <<EOF | sudo tee /etc/systemd/system/user@.service.d/delegate.conf

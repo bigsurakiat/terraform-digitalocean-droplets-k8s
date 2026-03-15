@@ -6,6 +6,6 @@
 .terraform.tfstate.lock.info
 *.backup
 /.terraform/*
-/scripts/join-master.sh
+/scripts/join-control-plane.sh
 /scripts/join-worker.sh
 /joiner/*

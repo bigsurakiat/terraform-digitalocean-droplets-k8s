@@ -6,8 +6,8 @@ fi
 
 kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 
-export MASTER_NODE_IP=$1
-export MASTER_NODE_IPV6=$2
+export CONTROL_PLANE_NODE_IP=$1
+export CONTROL_PLANE_NODE_IPV6=$2
 
 # Metrics Server
 kubectl apply -f /tmp/metrics-server.yaml
@@ -35,7 +35,7 @@ helm upgrade --install cilium cilium/cilium \
   --set bpf.masquerade=true \
   --set encryption.nodeEncryption=false \
   --set routingMode=tunnel \
-  --set k8sServiceHost=$MASTER_NODE_IP \
+  --set k8sServiceHost=$CONTROL_PLANE_NODE_IP \
   --set k8sServicePort=6443  \
   --set kubeProxyReplacement=${CILIUM_KUBEPROXY_REPLACEMENT:-true} \
   --set operator.replicas=1  \
@@ -56,7 +56,7 @@ helm upgrade --install cilium cilium/cilium \
   --set loadBalancer.mode=snat \
   --set operator.prometheus.enabled=true \
   --set ipv6.enabled=true \
-  --set ipv6NativeRoutingCIDR="${MASTER_NODE_IPV6}/120" \
+  --set ipv6NativeRoutingCIDR="${CONTROL_PLANE_NODE_IPV6}/120" \
   --set bandwidthManager.enabled=false \
   --set ipam.mode=kubernetes \
   --set ipam.operator.clusterPoolIPv4PodCIDRList="${CILIUM_IPV4_CIDR:-10.244.0.0/16}" \

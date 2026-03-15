@@ -46,7 +46,7 @@ resource "null_resource" "control-plane-node-initial" {
       $keyPath = Join-Path $env:TEMP 'tf_id_rsa'
       New-Item -ItemType Directory -Force -Path 'joiner' | Out-Null
       [System.IO.File]::WriteAllText($keyPath, $normalized, (New-Object System.Text.UTF8Encoding($false)))
-      & 'C:/Windows/System32/OpenSSH/scp.exe' -o StrictHostKeyChecking=no -i $keyPath "root@${digitalocean_droplet.control-plane-node[count.index].ipv4_address}:./join-master.sh" "joiner/join-master.sh"
+      & 'C:/Windows/System32/OpenSSH/scp.exe' -o StrictHostKeyChecking=no -i $keyPath "root@${digitalocean_droplet.control-plane-node[count.index].ipv4_address}:./join-control-plane.sh" "joiner/join-control-plane.sh"
       if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     EOT
   }
@@ -91,5 +91,66 @@ resource "null_resource" "control-plane-node-initial" {
       & 'C:/Windows/System32/OpenSSH/scp.exe' -o StrictHostKeyChecking=no -i $keyPath "root@${digitalocean_droplet.control-plane-node[count.index].ipv4_address}:./kubeconfig" "config/kubeconfig"
       if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     EOT
+  }
+}
+
+resource "null_resource" "control-plane-node-join" {
+  depends_on = [null_resource.additional-setup-control-plane-node, null_resource.control-plane-node-install-k8s]
+  count      = length(digitalocean_droplet.control-plane-node) > 1 ? length(digitalocean_droplet.control-plane-node) - 1 : 0
+  triggers = {
+    droplet_id = digitalocean_droplet.control-plane-node[count.index + 1].id
+  }
+  provisioner "file" {
+    source      = "config/kubeconfig"
+    destination = "/tmp/kubeconfig"
+    connection {
+      type        = "ssh"
+      user        = "root"
+      host        = digitalocean_droplet.control-plane-node[count.index + 1].ipv4_address
+      private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
+    }
+  }
+
+  provisioner "file" {
+    source      = "joiner/join-control-plane.sh"
+    destination = "/tmp/join-control-plane.sh"
+    connection {
+      type        = "ssh"
+      user        = "root"
+      host        = digitalocean_droplet.control-plane-node[count.index].ipv4_address
+      private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
+    }
+  }
+
+  provisioner "file" {
+    source      = "k8s/joiner.yaml"
+    destination = "/tmp/control-plane-join.yaml"
+    connection {
+      type        = "ssh"
+      user        = "root"
+      host        = digitalocean_droplet.control-plane-node[count.index + 1].ipv4_address
+      private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "export KUBEADM_API_ENDPOINT=\"$(cat /tmp/join-control-plane.sh | awk '{print $3}')\"",
+      "export KUBEADM_JOIN_CACERT=\"$(cat /tmp/join-control-plane.sh | awk '{print $7}')\"",
+      "export KUBEADM_JOIN_TOKEN=\"$(cat /tmp/join-control-plane.sh | awk '{print $5}')\"",
+      "sed -i -e \"s/{{control-plane-endpoint}}/$KUBEADM_API_ENDPOINT/g\" /tmp/control-plane-join.yaml",
+      "sed -i -e \"s/{{control-plane-join-token}}/$KUBEADM_JOIN_TOKEN/g\" /tmp/control-plane-join.yaml",
+      "sed -i -e \"s/{{control-plane-ca-cert-hash}}/$KUBEADM_JOIN_CACERT/g\" /tmp/control-plane-join.yaml",
+      "sed -i -e \"s/{{node-ipv4}}/${digitalocean_droplet.control-plane-node[count.index + 1].ipv4_address}/g\" /tmp/control-plane-join.yaml",
+      "sed -i -e \"s/{{node-ipv6}}/${digitalocean_droplet.control-plane-node[count.index + 1].ipv6_address}/g\" /tmp/control-plane-join.yaml",
+      "kubeadm join --config=/tmp/control-plane-join.yaml"
+    ]
+    connection {
+      type        = "ssh"
+      user        = "root"
+      host        = digitalocean_droplet.control-plane-node[count.index + 1].ipv4_address
+      private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
+      timeout     = "600s"
+    }
   }
 }

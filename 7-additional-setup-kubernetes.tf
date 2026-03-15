@@ -1,8 +1,8 @@
-resource "null_resource" "master-node-prometheus-setup" {
-  depends_on = [null_resource.master-node-initial, null_resource.worker-node-initial]
-  count      = length(digitalocean_droplet.master-node)
+resource "null_resource" "control-plane-node-prometheus-setup" {
+  depends_on = [null_resource.control-plane-node-initial, null_resource.worker-node-initial]
+  count      = length(digitalocean_droplet.control-plane-node)
   triggers = {
-    droplet_id = digitalocean_droplet.master-node[count.index].id
+    droplet_id = digitalocean_droplet.control-plane-node[count.index].id
   }
 
   provisioner "file" {
@@ -11,7 +11,7 @@ resource "null_resource" "master-node-prometheus-setup" {
     connection {
       type        = "ssh"
       user        = "root"
-      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      host        = digitalocean_droplet.control-plane-node[count.index].ipv4_address
       private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
     }
   }
@@ -23,18 +23,18 @@ resource "null_resource" "master-node-prometheus-setup" {
     connection {
       type        = "ssh"
       user        = "root"
-      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      host        = digitalocean_droplet.control-plane-node[count.index].ipv4_address
       private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
       timeout     = "600s"
     }
   }
 }
 
-resource "null_resource" "master-node-add-digitalocean-csi" {
-  depends_on = [null_resource.master-node-prometheus-setup, null_resource.worker-node-initial]
-  count      = length(digitalocean_droplet.master-node)
+resource "null_resource" "control-plane-node-add-digitalocean-csi" {
+  depends_on = [null_resource.control-plane-node-prometheus-setup, null_resource.worker-node-initial]
+  count      = length(digitalocean_droplet.control-plane-node)
   triggers = {
-    droplet_id = digitalocean_droplet.master-node[count.index].id
+    droplet_id = digitalocean_droplet.control-plane-node[count.index].id
   }
   provisioner "file" {
     source      = "config/kubeconfig"
@@ -42,7 +42,7 @@ resource "null_resource" "master-node-add-digitalocean-csi" {
     connection {
       type        = "ssh"
       user        = "root"
-      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      host        = digitalocean_droplet.control-plane-node[count.index].ipv4_address
       private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
     }
   }
@@ -53,7 +53,7 @@ resource "null_resource" "master-node-add-digitalocean-csi" {
     connection {
       type        = "ssh"
       user        = "root"
-      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      host        = digitalocean_droplet.control-plane-node[count.index].ipv4_address
       private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
     }
   }
@@ -66,44 +66,44 @@ resource "null_resource" "master-node-add-digitalocean-csi" {
     connection {
       type        = "ssh"
       user        = "root"
-      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      host        = digitalocean_droplet.control-plane-node[count.index].ipv4_address
       private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
       timeout     = "600s"
     }
   }
 
   provisioner "file" {
-    source      = "scripts/additional-setup-master-k8s.sh"
-    destination = "/tmp/additional-setup-master-k8s.sh"
+    source      = "scripts/additional-setup-control-plane-k8s.sh"
+    destination = "/tmp/additional-setup-control-plane-k8s.sh"
     connection {
       type        = "ssh"
       user        = "root"
-      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      host        = digitalocean_droplet.control-plane-node[count.index].ipv4_address
       private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
     }
   }
 
   provisioner "remote-exec" {
     inline = [
-      "sudo sed -i 's/\\r$//' /tmp/additional-setup-master-k8s.sh",
-      "sudo chmod +x /tmp/additional-setup-master-k8s.sh",
-      "sudo bash /tmp/additional-setup-master-k8s.sh"
+      "sudo sed -i 's/\\r$//' /tmp/additional-setup-control-plane-k8s.sh",
+      "sudo chmod +x /tmp/additional-setup-control-plane-k8s.sh",
+      "sudo bash /tmp/additional-setup-control-plane-k8s.sh ${digitalocean_droplet.control-plane-node[count.index].ipv4_address} ${digitalocean_droplet.control-plane-node[count.index].ipv6_address}"
     ]
     connection {
       type        = "ssh"
       user        = "root"
-      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      host        = digitalocean_droplet.control-plane-node[count.index].ipv4_address
       private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
       timeout     = "600s"
     }
   }
 }
 
-resource "null_resource" "master-node-add-cilium-lb-ppols" {
-  depends_on = [null_resource.master-node-add-digitalocean-csi, null_resource.worker-node-initial]
-  count      = length(digitalocean_droplet.master-node)
+resource "null_resource" "control-plane-node-add-cilium-lb-ppols" {
+  depends_on = [null_resource.control-plane-node-add-digitalocean-csi, null_resource.worker-node-initial]
+  count      = length(digitalocean_droplet.control-plane-node)
   triggers = {
-    droplet_id = digitalocean_droplet.master-node[count.index].id
+    droplet_id = digitalocean_droplet.control-plane-node[count.index].id
   }
   provisioner "file" {
     source      = "config/kubeconfig"
@@ -111,7 +111,7 @@ resource "null_resource" "master-node-add-cilium-lb-ppols" {
     connection {
       type        = "ssh"
       user        = "root"
-      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      host        = digitalocean_droplet.control-plane-node[count.index].ipv4_address
       private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
     }
   }
@@ -122,20 +122,20 @@ resource "null_resource" "master-node-add-cilium-lb-ppols" {
     connection {
       type        = "ssh"
       user        = "root"
-      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      host        = digitalocean_droplet.control-plane-node[count.index].ipv4_address
       private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
     }
   }
 
   provisioner "remote-exec" {
     inline = [
-      "sed -i -e \"s|{{ipv4-ip}}|${digitalocean_droplet.master-node[count.index].ipv4_address}|g\" /tmp/cilium-lb-ip-pool.yaml",
-      "sed -i -e \"s|{{ipv6-ip}}|${digitalocean_droplet.master-node[count.index].ipv6_address}|g\" /tmp/cilium-lb-ip-pool.yaml",
+      "sed -i -e \"s|{{ipv4-ip}}|${digitalocean_droplet.control-plane-node[count.index].ipv4_address}|g\" /tmp/cilium-lb-ip-pool.yaml",
+      "sed -i -e \"s|{{ipv6-ip}}|${digitalocean_droplet.control-plane-node[count.index].ipv6_address}|g\" /tmp/cilium-lb-ip-pool.yaml",
     ]
     connection {
       type        = "ssh"
       user        = "root"
-      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      host        = digitalocean_droplet.control-plane-node[count.index].ipv4_address
       private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
       timeout     = "600s"
     }
@@ -149,7 +149,7 @@ resource "null_resource" "master-node-add-cilium-lb-ppols" {
     connection {
       type        = "ssh"
       user        = "root"
-      host        = digitalocean_droplet.master-node[count.index].ipv4_address
+      host        = digitalocean_droplet.control-plane-node[count.index].ipv4_address
       private_key = trimspace(replace(replace(file("~/.ssh/id_rsa"), "\uFEFF", ""), "\r", ""))
       timeout     = "600s"
     }
